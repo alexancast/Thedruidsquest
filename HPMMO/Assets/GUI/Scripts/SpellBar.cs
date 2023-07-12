@@ -2,10 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using static UnityEngine.InputSystem.InputAction;
 
 public class SpellBar : MonoBehaviour
 {
+
+    [SerializeField] private TextMeshProUGUI text;
 
     private Material mat;
 
@@ -22,11 +25,13 @@ public class SpellBar : MonoBehaviour
         if (context.started)
         {
             GetComponent<RawImage>().enabled = true;
+            text.gameObject.SetActive(true);
             StartCoroutine(CastSpell(10));
         }
         else if (context.canceled)
         {
             StopAllCoroutines();
+            text.gameObject.SetActive(false);
             GetComponent<RawImage>().enabled = false;
         }
 

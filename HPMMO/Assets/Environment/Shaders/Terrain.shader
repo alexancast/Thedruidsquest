@@ -10,8 +10,9 @@ Shader "Custom/Terrain"
         _MainTex ("Albedo (RGB)", 2D) = "white" {}
         _Glossiness ("Smoothness", Range(0,1)) = 0.5
         _Metallic ("Metallic", Range(0,1)) = 0.0
-        _Radius ("Radius", Range(0, 10)) = 0.5
+        _Radius ("Draught Radius", Range(0, 10)) = 0.5
         _SmoothingRadius ("Smoothing radius", Range(0, 5)) = 0.5
+
 
     }
     SubShader
@@ -20,6 +21,8 @@ Shader "Custom/Terrain"
         LOD 200
 
         CGPROGRAM
+        // Upgrade NOTE: excluded shader from DX11, OpenGL ES 2.0 because it uses unsized arrays
+        #pragma exclude_renderers d3d11 gles
         // Physically based Standard lighting model, and enable shadows on all light types
         #pragma surface surf Standard fullforwardshadows
 
@@ -81,13 +84,13 @@ Shader "Custom/Terrain"
             float3 heightCol = lerp(_MountainColor.rgb, _GrassColor.rgb, IN.worldPos.y/_TerrainHeight);
 
 
+            float3 col = lerp(heightCol, _MountainColor, blendFactor);
+
+
             float dist = distance(IN.uv_MainTex, _PlayerPos.xz);
             float alpha = 1 - smoothstep(_Radius - _SmoothingRadius, _Radius + _SmoothingRadius, dist);
 
             dist = clamp(dist, 0, _Radius);
-
-            float3 col = lerp(heightCol, _MountainColor, blendFactor);
-
             col = lerp(col, _MountainColor, alpha);
             
             o.Albedo = col;

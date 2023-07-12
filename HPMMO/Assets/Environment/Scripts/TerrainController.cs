@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using static UnityEngine.InputSystem.InputAction;
+using System.Collections.Generic;
 
 public class TerrainController : MonoBehaviour
 {
@@ -11,14 +12,14 @@ public class TerrainController : MonoBehaviour
     [SerializeField] private Color livingColor, deadColor;
     [SerializeField] private int textureSize;
 
+    public List<Vector4> draughtPoints = new List<Vector4>();
+
     private Renderer renderer;
-
-
 
     private void Start()
     {
         renderer = GetComponent<Renderer>();
-
+        
     }
 
     public void GenerateAttack(CallbackContext context)
@@ -31,6 +32,9 @@ public class TerrainController : MonoBehaviour
         else if (context.canceled)
         {
             StopAllCoroutines();
+
+            Vector3 draughtPoint = playerTransform.position;
+            draughtPoints.Add(draughtPoint);
         }
     }
 
@@ -38,6 +42,8 @@ public class TerrainController : MonoBehaviour
     public IEnumerator DrainGround(float castTime) {
 
         float elapsedTime = 0;
+
+        renderer.material.SetFloat("_SmoothingRadius", 5);
 
         while (elapsedTime < castTime)
         {
