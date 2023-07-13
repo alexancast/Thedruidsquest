@@ -11,6 +11,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Animator animator;
     [SerializeField] private Transform attackSpawnPoint;
     [SerializeField] private GameObject baseAttack;
+    [SerializeField] private ParticleSystem particleSystem;
 
     [Header("Values")]
     [SerializeField] private float movementSpeed;
@@ -40,6 +41,11 @@ public class PlayerMovement : MonoBehaviour
             movementVector.y = 0;
         }
 
+        if (movementVector.z > 0)
+        {
+            CancelCast();
+        }
+
         controller.Move(transform.TransformDirection(movementVector) * Time.deltaTime * movementSpeed);
         Look();
     }
@@ -57,6 +63,13 @@ public class PlayerMovement : MonoBehaviour
         if (context.performed)
         {
 
+            if (movementVector.z <= 0)
+            {
+                animator.SetBool("Draining", true);
+                particleSystem.Play();
+
+            }
+
             //// Skapa en ray från muspositionen
             //Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
@@ -72,13 +85,17 @@ public class PlayerMovement : MonoBehaviour
         }
         else if (context.canceled)
         {
-
+            CancelCast();
         }
         
     }
 
-    
 
+    public void CancelCast() {
+
+        animator.SetBool("Draining", false);
+        particleSystem.Stop();
+    }
 
 
     public float rotationSpeed = 5f; // Justera hastigheten för rotationen

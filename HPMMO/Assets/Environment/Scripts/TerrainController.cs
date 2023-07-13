@@ -7,6 +7,8 @@ public class TerrainController : MonoBehaviour
 {
     [Header("Components")]
     [SerializeField] private Transform playerTransform;
+    [SerializeField] private Transform draughtPoint;
+    [SerializeField] private TerrainGeneration terrainGeneration;
 
     [Header("Values")]
     [SerializeField] private Color livingColor, deadColor;
@@ -33,8 +35,8 @@ public class TerrainController : MonoBehaviour
         {
             StopAllCoroutines();
 
-            Vector3 draughtPoint = playerTransform.position;
-            draughtPoints.Add(draughtPoint);
+            //Vector3 draughtPoint = playerTransform.position;
+            //draughtPoints.Add(draughtPoint);
         }
     }
 
@@ -43,7 +45,7 @@ public class TerrainController : MonoBehaviour
 
         float elapsedTime = 0;
 
-        renderer.material.SetFloat("_SmoothingRadius", 5);
+        draughtPoint.position = playerTransform.position + new Vector3(50, 0, 50); //Accounts for the offset in the shader, not a very nice way of doing this but anyway.
 
         while (elapsedTime < castTime)
         {
@@ -61,9 +63,7 @@ public class TerrainController : MonoBehaviour
 
     public void Update()
     {
-
-        Vector3 pos = new Vector3(playerTransform.position.x + 50, 0, playerTransform.position.z + 50);
-        renderer.material.SetVector("_PlayerPos", pos);
+        renderer.material.SetVector("_PlayerPos", draughtPoint.position);
     }
 
 
