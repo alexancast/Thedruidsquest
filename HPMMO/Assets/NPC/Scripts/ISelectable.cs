@@ -4,5 +4,5 @@ using UnityEngine;
 
 public interface ISelectable
 {
-    
+    public Selection.SelectionType GetSelectionType();   
 }

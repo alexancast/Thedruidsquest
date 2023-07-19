@@ -18,37 +18,60 @@ public class SpellBar : MonoBehaviour
         
     }
 
-
-    public void Cast(CallbackContext context) {
-
-
-        if (context.started)
-        {
-            GetComponent<RawImage>().enabled = true;
-            text.gameObject.SetActive(true);
-            StartCoroutine(CastSpell(10));
-        }
-        else if (context.canceled)
-        {
-            StopAllCoroutines();
-            text.gameObject.SetActive(false);
-            GetComponent<RawImage>().enabled = false;
-        }
-
-
+    public void OnEnable()
+    {
+        SystemManager.OnSpellCastInitiated += InitiateCast;
+        SystemManager.OnSpellCastAbrupted += AbruptCast;
+        SystemManager.OnSpellCastFinished += AbruptCast;
     }
 
-    public IEnumerator CastSpell(float castTime) {
+
+    public void OnDisable()
+    {
+        SystemManager.OnSpellCastInitiated -= InitiateCast;
+        SystemManager.OnSpellCastAbrupted -= AbruptCast;
+        SystemManager.OnSpellCastFinished -= AbruptCast;
+    }
+
+    public void InitiateCast(AbilityBoilerPlate ability) {
+
+        GetComponent<RawImage>().enabled = true;
+        text.text = ability.abilityName;
+        text.gameObject.SetActive(true);
+        StartCoroutine(CastSpell(ability));
+    }
+
+    public void AbruptCast(AbilityBoilerPlate ability) {
+
+        StopAllCoroutines();
+        text.gameObject.SetActive(false);
+        GetComponent<RawImage>().enabled = false;
+    }
+
+
+
+    public IEnumerator CastSpell(AbilityBoilerPlate ability) {
 
         float elapsedTime = 0;
 
-        while (elapsedTime < castTime)
+        while (elapsedTime < ability.castTime)
         {
-            mat.SetFloat("_FillAmount", elapsedTime / castTime);
+
+            float fill = elapsedTime / ability.castTime;
+
+            if (ability.castType == CastType.CHANNELED)
+            {
+                fill = Mathf.Lerp(1, 0, fill);
+            }
+
+            mat.SetFloat("_FillAmount", fill);
 
             elapsedTime += Time.deltaTime;
             yield return null;
         }
+
+        SystemManager.FinishSpell(ability);
+        
 
     }
 

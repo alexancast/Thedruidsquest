@@ -66,12 +66,12 @@ Material:
     - _DstBlend: 0
     - _EdgeRadius: 0.5
     - _EmptyOpacity: 1
-    - _FillAmount: 0.9996735
+    - _FillAmount: 0.993793
     - _FillOpacity: 1
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _Height: 0.15
+    - _Height: 0.08
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1

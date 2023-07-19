@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c8d2b402fb6c4a528b5fc11eec0ff66, type: 3}
+  m_Name: Gaia's Embrace
+  m_EditorClassIdentifier: 
+  icon: {fileID: 21300000, guid: ea5e8c5cd5609478ca659b04a7d59243, type: 3}
+  abilityName: Gaia's Embrace
+  abilityType: 0
+  description: Tap into the life force of nature, replenishing your mana at the cost
+    of dwindling energy within the environment.
+  castType: 0
+  castTime: 3
+  cooldown: 15
+  reservoirCost: 1
+  effect: {fileID: 7535820820094014815, guid: 671d389d4cf184ae9a3acb3df8051900, type: 3}

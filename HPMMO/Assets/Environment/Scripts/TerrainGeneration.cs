@@ -8,12 +8,13 @@ public class TerrainGeneration : MonoBehaviour
 
     public NoiseVisualiser noiseVisualiser;
 
-    
-
     public int size = 10;
     public float scale = 1f;
     public float amplitude = 100;
     private Mesh terrainMesh;
+
+
+    public float Scale { get { return scale; } }
 
 
     public void UpdateColor() {

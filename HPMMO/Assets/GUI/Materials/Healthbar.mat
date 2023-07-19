@@ -58,7 +58,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _BorderWidth: 0.02
+    - _BorderWidth: 0.01
     - _BumpScale: 1
     - _CornerRadius: 0.288
     - _Cutoff: 0.5
@@ -71,7 +71,7 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _Height: 0.15
+    - _Height: 0.04
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
@@ -85,7 +85,7 @@ Material:
     - _TextureOffset: 0
     - _TextureScale: 2
     - _UVSec: 0
-    - _Width: 0.7
+    - _Width: 1
     - _ZWrite: 1
     m_Colors:
     - _BorderColor: {r: 0, g: 0, b: 0, a: 1}

@@ -10,15 +10,37 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private GameObject targetPlate;
     [SerializeField] private Animator animator;
     [SerializeField] private Transform attackSpawnPoint;
-    [SerializeField] private GameObject baseAttack;
-    [SerializeField] private ParticleSystem particleSystem;
+    [SerializeField] private ParticleSystem particles;
+    [SerializeField] private PlayerStats playerStats;
+    [SerializeField] private GameObject droughtPoint;
+    [SerializeField] private LayerMask droughtPointLayer;
+    [SerializeField] private GameObject selectionIndicator;
 
-    [Header("Values")]
-    [SerializeField] private float movementSpeed;
+    [HideInInspector] public Vector3 movementVector;
 
-    private Vector3 movementVector;
+    private GameObject selectedObject;
 
-    public void Move(CallbackContext context) {
+    public static PlayerMovement Instance;
+
+    public void Awake()
+    {
+        Instance = this;
+    }
+
+    public ISelectable SelectedObject() {
+
+        if (selectedObject != null)
+        {
+            return selectedObject.GetComponent<ISelectable>();
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    public void Move(CallbackContext context)
+    {
 
         //movementVector.x = context.ReadValue<Vector2>().x;
         movementVector.z = context.ReadValue<Vector2>().y;
@@ -34,67 +56,142 @@ public class PlayerMovement : MonoBehaviour
         if (!controller.isGrounded)
         {
             movementVector.y += Time.deltaTime * Physics.gravity.y * 80;
- 
+
         }
         else
         {
             movementVector.y = 0;
         }
 
-        if (movementVector.z > 0)
+        if (Mathf.Abs(movementVector.z) > 0)
         {
-            CancelCast();
+            SystemManager.AbruptSpell(null);
         }
 
-        controller.Move(transform.TransformDirection(movementVector) * Time.deltaTime * movementSpeed);
+        controller.Move(transform.TransformDirection(movementVector) * Time.deltaTime * playerStats.movementSpeed);
         Look();
     }
 
-    public void LaunchAttack() {
-
-        GameObject o = Instantiate(baseAttack, attackSpawnPoint.position, transform.rotation);
-        o.AddComponent<Rigidbody>().AddForce(o.transform.forward * 20, ForceMode.Impulse);
-
+    public void OnEnable()
+    {
+        SystemManager.OnSpellCastInitiated += StartCast;
+        SystemManager.OnSpellCastAbrupted += AbruptCast;
+        SystemManager.OnSpellCastFinished += FinishCast;
     }
 
-    public void MouseButtonDown(CallbackContext context)
+    public void OnDisable()
     {
+        SystemManager.OnSpellCastInitiated -= StartCast;
+        SystemManager.OnSpellCastAbrupted -= AbruptCast;
+        SystemManager.OnSpellCastFinished -= FinishCast;
+    }
 
+    public void Select(CallbackContext context)
+    {
         if (context.performed)
         {
 
-            if (movementVector.z <= 0)
+            // Skapa en stråle från kameran till muspekaren
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
+
+            // Utför raycasting och kontrollera om det finns en träffpunkt
+            if (Physics.Raycast(ray, out hit))
             {
-                animator.SetBool("Draining", true);
-                particleSystem.Play();
+                if (hit.collider.GetComponent<ISelectable>() != null)
+                {
+                    selectedObject = hit.collider.gameObject;
 
+                    selectionIndicator.transform.parent = hit.collider.gameObject.transform;
+                    selectionIndicator.transform.localPosition = Vector3.zero;
+                    selectionIndicator.SetActive(true);
+                    selectionIndicator.GetComponent<Selection>().SetTarget(hit.collider.GetComponent<ISelectable>().GetSelectionType());
+
+                }
+                else if(selectedObject != null)
+                {
+                    selectionIndicator.transform.parent = null;
+                    selectionIndicator.transform.position = Vector3.zero;
+                    selectionIndicator.SetActive(false);
+                }
             }
-
-            //// Skapa en ray från muspositionen
-            //Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-            //// Skapa en raycast träffvariabel för att lagra resultatet
-            //RaycastHit hit;
-
-            //// Utför raycasten och kontrollera om den träffar något
-            //if (Physics.Raycast(ray, out hit))
-            //{
-            //    LaunchAttack();
-            //}
-
         }
-        else if (context.canceled)
-        {
-            CancelCast();
-        }
-        
     }
 
 
-    public void CancelCast() {
+    public void StartCast(AbilityBoilerPlate ability)
+    {
+
+        animator.SetBool("Draining", true);
+        particles.Play();
+
+        if (ability.castType == CastType.CHANNELED)
+        {
+            Instantiate(ability.effect, transform.position, transform.rotation);
+        }
+    }
+
+    public void AbruptCast(AbilityBoilerPlate ability)
+    {
 
         animator.SetBool("Draining", false);
-        particleSystem.Stop();
+        particles.Stop();
+    }
+
+    public void FinishCast(AbilityBoilerPlate ability)
+    {
+
+        animator.SetBool("Draining", false);
+        particles.Stop();
+
+        if (ability.castType == CastType.BUILD)
+        {
+            Instantiate(ability.effect, transform.position, transform.rotation);
+
+
+            RaycastHit hit;
+
+            Vector3 castPos = transform.position;
+
+            if (Physics.Raycast(transform.position, Vector3.down, out hit, Mathf.Infinity, droughtPointLayer))
+            {
+                castPos = hit.point;
+            }
+
+            GameObject dp = Instantiate(droughtPoint, castPos, transform.rotation);
+            dp.GetComponent<DroughtPoint>().Setup(ability.reservoirCost);
+        }
+
+    }
+
+
+    public float CheckDrought(AbilityBoilerPlate ability)
+    {
+
+        RaycastHit hit;
+
+        Vector3 castPos = transform.position;
+
+        if (Physics.Raycast(transform.position, Vector3.down, out hit, Mathf.Infinity, droughtPointLayer))
+        {
+            castPos = hit.point;
+        }
+
+
+        Collider[] colliders = Physics.OverlapSphere(castPos, ability.reservoirCost);
+
+        float draughtMultiplier = 1; //Lower value means more extensive draught;
+
+        foreach (Collider collider in colliders)
+        {
+            if (collider.GetComponent<DroughtPoint>())
+            {
+                draughtMultiplier *= collider.GetComponent<DroughtPoint>().GetStrength();
+            }
+        }
+
+        return draughtMultiplier;
+
     }
 
 

@@ -2,9 +2,12 @@ Shader "Custom/Terrain"
 {
     Properties
     {
+        _GrassTex ("Grass Texture", 2D) = "white" {}
+        _DirtTex ("Dirt Texture", 2D) = "white" {}
         _PlayerPos ("Player Position", Vector) = (0,0,0)
         _GrassColor ("Grass Color", Color) = (1,1,1,1)
         _MountainColor ("Mountain Color", Color) = (1,1,1,1)
+        _DroughtColor ("Drought Color", Color) = (1,1,1,1)
         _BlendSharpness ("Blend Sharpness", Range(0, 1)) = 0.1
         _TerrainHeight("Terrain Height", float) = 10
         _MainTex ("Albedo (RGB)", 2D) = "white" {}
@@ -13,8 +16,10 @@ Shader "Custom/Terrain"
         _Radius ("Draught Radius", Range(0, 10)) = 0.5
         _SmoothingRadius ("Smoothing radius", Range(0, 5)) = 0.5
 
+        _ActiveDroughtPointsAmount("ActiveDroughtPoints", int) = 0
 
     }
+
     SubShader
     {
         Tags { "RenderType"="Opaque" }
@@ -47,10 +52,9 @@ Shader "Custom/Terrain"
         float3 _PlayerPos;
         float _Radius;
         float _SmoothingRadius;
+        float4 _DroughtColor;
+        float4 droughtPoints[10];
 
-
-        // Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
-        // See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
         // #pragma instancing_options assumeuniformscaling
         UNITY_INSTANCING_BUFFER_START(Props)
             // put more per-instance properties here
@@ -70,6 +74,9 @@ Shader "Custom/Terrain"
 
         void surf (Input IN, inout SurfaceOutputStandard o)
         {
+
+            
+
             /// Beräkna normalens vinkel i förhållande till uppåtriktningen (0, 1, 0)
             float angle = dot(IN.worldNormal, float3(0, 1, 0));
 
@@ -83,15 +90,24 @@ Shader "Custom/Terrain"
 
             float3 heightCol = lerp(_MountainColor.rgb, _GrassColor.rgb, IN.worldPos.y/_TerrainHeight);
 
-
             float3 col = lerp(heightCol, _MountainColor, blendFactor);
 
 
-            float dist = distance(IN.uv_MainTex, _PlayerPos.xz);
-            float alpha = 1 - smoothstep(_Radius - _SmoothingRadius, _Radius + _SmoothingRadius, dist);
+            //Setting drought
+            for(int i = 0; i < 10; i++){
 
-            dist = clamp(dist, 0, _Radius);
-            col = lerp(col, _MountainColor, alpha);
+
+                float dist = distance(IN.uv_MainTex, droughtPoints[i].xy);
+
+                float radius = droughtPoints[i].z;
+
+                float alpha = 1 - smoothstep(radius - _SmoothingRadius, radius + _SmoothingRadius, dist);
+                dist = clamp(dist, 0, radius);
+                col = lerp(col, _DroughtColor, alpha);
+
+                
+
+            }
             
             o.Albedo = col;
         }
